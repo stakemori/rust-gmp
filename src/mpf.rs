@@ -245,9 +245,7 @@ impl PartialOrd for Mpf {
 
 macro_rules! div_guard {
     (Div, $is_zero: expr) => {
-        if $is_zero {
-            panic!("divide by zero")
-        }
+        nonzero_assert!($is_zero);
     };
     ($tr: ident, $what: expr) => {}
 }

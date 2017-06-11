@@ -149,10 +149,8 @@ impl Mpq {
     }
 
     pub fn invert(&self) -> Mpq {
+        nonzero_assert!(self.is_zero());
         unsafe {
-            if self.is_zero() {
-                panic!("divide by zero")
-            }
 
             let mut res = Mpq::new();
             __gmpq_inv(&mut res.mpq, &self.mpq);
@@ -250,9 +248,7 @@ impl PartialOrd for Mpq {
 
 macro_rules! div_guard {
     (Div, $what: expr) => {
-        if $what.is_zero() {
-            panic!("divide by zero")
-        }
+        nonzero_assert!($what.is_zero());
     };
     ($tr: ident, $what: expr) => {}
 }

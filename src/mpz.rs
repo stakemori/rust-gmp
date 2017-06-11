@@ -246,11 +246,8 @@ impl Mpz {
     }
 
     pub fn div_floor(&self, other: &Mpz) -> Mpz {
+        nonzero_assert!(other.is_zero());
         unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
             let mut res = Mpz::new();
             __gmpz_fdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
             res
@@ -258,11 +255,8 @@ impl Mpz {
     }
 
     pub fn mod_floor(&self, other: &Mpz) -> Mpz {
+        nonzero_assert!(other.is_zero());
         unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
             let mut res = Mpz::new();
             __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
             res
@@ -330,11 +324,8 @@ impl Mpz {
     }
 
     pub fn modulus(&self, modulo: &Mpz) -> Mpz {
+        nonzero_assert!(modulo.is_zero());
         unsafe {
-            if modulo.is_zero() {
-                panic!("divide by zero")
-            }
-
             let mut res = Mpz::new();
             __gmpz_mod(&mut res.mpz, &self.mpz, &modulo.mpz);
             res
@@ -526,14 +517,10 @@ impl PartialOrd for Mpz {
 // This macro inserts a guard against division by 0 for Div and Rem implementations
 macro_rules! div_guard {
     (Div, $is_zero: expr) => {
-        if $is_zero {
-            panic!("divide by zero")
-        }
+        nonzero_assert!($is_zero);
     };
     (Rem, $is_zero: expr) => {
-        if $is_zero {
-            panic!("divide by zero")
-        }
+        nonzero_assert!($is_zero);
     };
     ($tr: ident, $is_zero: expr) => {}
 }

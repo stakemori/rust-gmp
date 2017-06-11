@@ -7,6 +7,9 @@ extern crate libc;
 extern crate num_traits;
 
 mod ffi;
+
+#[macro_use]
+mod macros;
 pub mod mpz;
 pub mod mpq;
 pub mod mpf;
