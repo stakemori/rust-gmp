@@ -16,7 +16,7 @@ use num_traits::{Zero, One};
 #[repr(C)]
 pub struct mpq_struct {
     _mp_num: mpz_struct,
-    _mp_den: mpz_struct
+    _mp_den: mpz_struct,
 }
 
 pub type mpq_srcptr = *const mpq_struct;
@@ -54,11 +54,13 @@ pub struct Mpq {
     mpq: mpq_struct,
 }
 
-unsafe impl Send for Mpq { }
-unsafe impl Sync for Mpq { }
+unsafe impl Send for Mpq {}
+unsafe impl Sync for Mpq {}
 
 impl Drop for Mpq {
-    fn drop(&mut self) { unsafe { __gmpq_clear(&mut self.mpq) } }
+    fn drop(&mut self) {
+        unsafe { __gmpq_clear(&mut self.mpq) }
+    }
 }
 
 impl Mpq {
@@ -184,7 +186,9 @@ impl Mpq {
         res
     }
 
-    pub fn zero() -> Mpq { Mpq::new() }
+    pub fn zero() -> Mpq {
+        Mpq::new()
+    }
     pub fn is_zero(&self) -> bool {
         unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
     }
@@ -192,7 +196,7 @@ impl Mpq {
 
 #[derive(Debug)]
 pub struct ParseMpqError {
-    _priv: ()
+    _priv: (),
 }
 
 impl fmt::Display for ParseMpqError {
@@ -219,7 +223,7 @@ impl Clone for Mpq {
     }
 }
 
-impl Eq for Mpq { }
+impl Eq for Mpq {}
 impl PartialEq for Mpq {
     fn eq(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_equal(&self.mpq, &other.mpq) != 0 }
@@ -350,9 +354,7 @@ impl From<Mpq> for f64 {
 
 impl<'a> From<&'a Mpq> for f64 {
     fn from(other: &Mpq) -> f64 {
-        unsafe {
-            __gmpq_get_d(&other.mpq) as f64
-        }
+        unsafe { __gmpq_get_d(&other.mpq) as f64 }
     }
 }
 

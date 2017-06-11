@@ -126,35 +126,35 @@ mod mpz {
         assert!((&x % -&y).to_string() == (20i32 % -3).to_string());
         assert!((-&x % &y).to_string() == (-20i32 % 3).to_string());
     }
-    
+
     #[test]
     fn test_add() {
-    	let x: Mpz = From::<i64>::from(2);
-    	let y: Mpz = From::<i64>::from(3);
-    	let str5 = 5i32.to_string();
-    	assert!((&x + &y).to_string() == str5);
-    	assert!((&x + 3).to_string() == str5);
-    	assert!((&y + 2).to_string() == str5);
+        let x: Mpz = From::<i64>::from(2);
+        let y: Mpz = From::<i64>::from(3);
+        let str5 = 5i32.to_string();
+        assert!((&x + &y).to_string() == str5);
+        assert!((&x + 3).to_string() == str5);
+        assert!((&y + 2).to_string() == str5);
     }
-    
+
     #[test]
     fn test_sub() {
-    	let x: Mpz = From::<i64>::from(2);
-    	let y: Mpz = From::<i64>::from(3);
-    	assert!((&x - &y).to_string() == (-1i32).to_string());
-    	assert!((&y - &x).to_string() == 1i32.to_string());
-    	assert!((&y - 8).to_string() == (-5i32).to_string());
+        let x: Mpz = From::<i64>::from(2);
+        let y: Mpz = From::<i64>::from(3);
+        assert!((&x - &y).to_string() == (-1i32).to_string());
+        assert!((&y - &x).to_string() == 1i32.to_string());
+        assert!((&y - 8).to_string() == (-5i32).to_string());
     }
-    
+
     #[test]
     fn test_mul() {
-    	let x: Mpz = From::<i64>::from(2);
-    	let y: Mpz = From::<i64>::from(3);
-    	assert!((&x * &y).to_string() == 6i32.to_string());
-    	assert!((&x * 3i64).to_string() == 6i32.to_string());
-    	assert!((&y * -5i64).to_string() == (-15i32).to_string());
-    	// check with values not fitting in 32 bits
-    	assert!((&x * 5000000000i64).to_string() == 10000000000i64.to_string());
+        let x: Mpz = From::<i64>::from(2);
+        let y: Mpz = From::<i64>::from(3);
+        assert!((&x * &y).to_string() == 6i32.to_string());
+        assert!((&x * 3i64).to_string() == 6i32.to_string());
+        assert!((&y * -5i64).to_string() == (-15i32).to_string());
+        // check with values not fitting in 32 bits
+        assert!((&x * 5000000000i64).to_string() == 10000000000i64.to_string());
     }
 
     #[test]
@@ -193,7 +193,7 @@ mod mpz {
 
     #[test]
     fn test_from_slice_u8() {
-        let v: Vec<u8> = vec!(255, 255);
+        let v: Vec<u8> = vec![255, 255];
         let x: Mpz = From::from(&v[..]);
         assert!(x.to_string() == "65535".to_string());
     }
@@ -335,7 +335,7 @@ mod mpz {
     fn test_probab_prime() {
         let prime: Mpz = From::<i64>::from(2);
         assert!(prime.probab_prime(15) == ProbabPrimeResult::Prime);
-        
+
         let not_prime: Mpz = From::<i64>::from(4);
         assert!(not_prime.probab_prime(15) == ProbabPrimeResult::NotPrime);
     }
@@ -366,7 +366,7 @@ mod mpz {
         let twentyfour: Mpz = From::<i64>::from(24);
         let (g, s, t) = eighteen.gcdext(&twentyfour);
         assert!(g == six);
-        assert!(g == s*eighteen + t*twentyfour);
+        assert!(g == s * eighteen + t * twentyfour);
     }
 
     #[test]
@@ -428,10 +428,8 @@ mod mpz {
     fn test_bit_fiddling() {
         let mut xs: Mpz = From::<i64>::from(0b1010_1000_0010_0011);
         assert!(xs.bit_length() == 16);
-        let mut ys = [true, false, true, false,
-                      true, false, false, false,
-                      false, false, true, false,
-                      false, false, true, true];
+        let mut ys = [true, false, true, false, true, false, false, false, false, false, true,
+                      false, false, false, true, true];
         ys.reverse();
         for i in 0..xs.bit_length() {
             assert!(xs.tstbit(i) == ys[i]);
@@ -473,7 +471,7 @@ mod mpz {
         let one: Mpz = From::<i64>::from(1);
         let two = &one + &one;
 
-        let hash = |x : &Mpz| {
+        let hash = |x: &Mpz| {
             let mut hasher = DefaultHasher::new();
             x.hash(&mut hasher);
             hasher.finish()
@@ -485,13 +483,11 @@ mod mpz {
 
     #[test]
     fn test_hash_long() {
-        let a = Mpz::from_str_radix("348917329847193287498312749187234192387", 10)
-                .unwrap();
-        let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10)
-                .unwrap();
+        let a = Mpz::from_str_radix("348917329847193287498312749187234192387", 10).unwrap();
+        let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10).unwrap();
         let one: Mpz = From::<i64>::from(1);
 
-        let hash = |x : &Mpz| {
+        let hash = |x: &Mpz| {
             let mut hasher = DefaultHasher::new();
             x.hash(&mut hasher);
             hasher.finish()
@@ -512,13 +508,14 @@ mod mpz {
         let xffff: Mpz = From::<i64>::from(65535);
         let max_u64: Mpz = From::<u64>::from(u64::MAX);
 
-        assert_eq!(Into::<Vec<u8>>::into(&minus_five), vec!(5u8));
-        assert_eq!(Into::<Vec<u8>>::into(&minus_one), vec!(1u8));
-        assert_eq!(Into::<Vec<u8>>::into(&zero), vec!(0u8));
-        assert_eq!(Into::<Vec<u8>>::into(&one), vec!(1u8));
-        assert_eq!(Into::<Vec<u8>>::into(&five), vec!(5u8));
-        assert_eq!(Into::<Vec<u8>>::into(&xffff), vec!(255u8, 255u8));
-        assert_eq!(Into::<Vec<u8>>::into(&max_u64), vec!(255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8));
+        assert_eq!(Into::<Vec<u8>>::into(&minus_five), vec![5u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&minus_one), vec![1u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&zero), vec![0u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&one), vec![1u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&five), vec![5u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&xffff), vec![255u8, 255u8]);
+        assert_eq!(Into::<Vec<u8>>::into(&max_u64),
+                   vec![255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8]);
     }
 
     #[test]
@@ -684,9 +681,12 @@ mod mpq {
         let minus_one = -&one;
         let two = &one + &one;
 
-        assert_eq!(Mpq::from_str_radix("1/-1", 10).unwrap(), Mpq::ratio(&minus_one, &one));
-        assert_eq!(Mpq::from_str_radix("0/2", 10).unwrap(), Mpq::ratio(&zero, &one));
-        assert_eq!(Mpq::from_str_radix("2/4", 10).unwrap(), Mpq::ratio(&one, &two));
+        assert_eq!(Mpq::from_str_radix("1/-1", 10).unwrap(),
+                   Mpq::ratio(&minus_one, &one));
+        assert_eq!(Mpq::from_str_radix("0/2", 10).unwrap(),
+                   Mpq::ratio(&zero, &one));
+        assert_eq!(Mpq::from_str_radix("2/4", 10).unwrap(),
+                   Mpq::ratio(&one, &two));
     }
 }
 

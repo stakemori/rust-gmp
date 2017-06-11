@@ -2,12 +2,14 @@ use libc::{c_char, c_int, c_long, c_ulong, c_void, c_double, size_t};
 use super::rand::gmp_randstate_t;
 use super::sign::Sign;
 use std::convert::From;
-use std::mem::{uninitialized,size_of};
+use std::mem::{uninitialized, size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
 use std::error::Error;
-use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Not, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Not, Shl,
+               ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr,
+               BitOrAssign, Rem, RemAssign};
 use std::ffi::CString;
 use std::{u32, i32};
 use num_traits::{Zero, One};
@@ -18,7 +20,7 @@ use ffi::*;
 pub struct mpz_struct {
     _mp_alloc: c_int,
     _mp_size: c_int,
-    _mp_d: *mut c_void
+    _mp_d: *mut c_void,
 }
 
 pub type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
@@ -86,10 +88,20 @@ extern "C" {
     fn __gmpz_gcdext(g: mpz_ptr, s: mpz_ptr, t: mpz_ptr, a: mpz_srcptr, b: mpz_srcptr);
     fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
-    fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
-                     endian: c_int, nails: size_t, op: *const c_void);
-    fn __gmpz_export(rop: *mut c_void, countp: *mut size_t, order: c_int, size: size_t, 
-                     endian: c_int, nails: size_t, op: mpz_srcptr);
+    fn __gmpz_import(rop: mpz_ptr,
+                     count: size_t,
+                     order: c_int,
+                     size: size_t,
+                     endian: c_int,
+                     nails: size_t,
+                     op: *const c_void);
+    fn __gmpz_export(rop: *mut c_void,
+                     countp: *mut size_t,
+                     order: c_int,
+                     size: size_t,
+                     endian: c_int,
+                     nails: size_t,
+                     op: mpz_srcptr);
     fn __gmpz_root(rop: mpz_ptr, op: mpz_srcptr, n: c_ulong) -> c_int;
     fn __gmpz_sqrt(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_millerrabin(n: mpz_srcptr, reps: c_int) -> c_int;
@@ -101,11 +113,13 @@ pub struct Mpz {
     mpz: mpz_struct,
 }
 
-unsafe impl Send for Mpz { }
-unsafe impl Sync for Mpz { }
+unsafe impl Send for Mpz {}
+unsafe impl Sync for Mpz {}
 
 impl Drop for Mpz {
-    fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
+    fn drop(&mut self) {
+        unsafe { __gmpz_clear(&mut self.mpz) }
+    }
 }
 
 /// The result of running probab_prime
@@ -113,7 +127,7 @@ impl Drop for Mpz {
 pub enum ProbabPrimeResult {
     NotPrime,
     ProbablyPrime,
-    Prime
+    Prime,
 }
 
 impl Mpz {
@@ -148,9 +162,7 @@ impl Mpz {
     }
 
     pub fn size_in_base(&self, base: u8) -> usize {
-        unsafe {
-            __gmpz_sizeinbase(&self.mpz, base as c_int) as usize
-        }
+        unsafe { __gmpz_sizeinbase(&self.mpz, base as c_int) as usize }
     }
 
     // TODO: fail on an invalid base
@@ -168,7 +180,7 @@ impl Mpz {
             __gmpz_get_str(vector.as_mut_ptr() as *mut _, base as c_int, &self.mpz);
 
             let mut first_nul = None;
-            let mut index : usize = 0;
+            let mut index: usize = 0;
             for elem in &vector {
                 if *elem == 0 {
                     first_nul = Some(index);
@@ -180,14 +192,15 @@ impl Mpz {
 
             vector.truncate(first_nul);
             match String::from_utf8(vector) {
-                Ok(s)  => s,
-                Err(_) => panic!("GMP returned invalid UTF-8!")
+                Ok(s) => s,
+                Err(_) => panic!("GMP returned invalid UTF-8!"),
             }
         }
     }
 
     pub fn from_str_radix(s: &str, base: u8) -> Result<Mpz, ParseMpzError> {
-        let s = CString::new(s.to_string()).map_err(|_| ParseMpzError { _priv: () })?;
+        let s = CString::new(s.to_string())
+            .map_err(|_| ParseMpzError { _priv: () })?;
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninitialized();
@@ -258,11 +271,13 @@ impl Mpz {
 
     /// Determine whether n is prime.
     ///
-    /// This function performs some trial divisions, then reps Miller-Rabin probabilistic primality tests. A higher reps value will reduce the chances of a non-prime being identified as “probably prime”. A composite number will be identified as a prime with a probability of less than 4^(-reps). Reasonable values of reps are between 15 and 50. 
+    /// This function performs some trial divisions, then reps Miller-Rabin
+    /// probabilistic primality tests. A higher reps value will reduce the
+    /// chances of a non-prime being identified as “probably prime”. A
+    /// composite number will be identified as a prime with a probability of
+    /// less than 4^(-reps). Reasonable values of reps are between 15 and 50.
     pub fn probab_prime(&self, reps: i32) -> ProbabPrimeResult {
-        match unsafe {
-            __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8
-        } {
+        match unsafe { __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8 } {
             2 => ProbabPrimeResult::Prime,
             1 => ProbabPrimeResult::ProbablyPrime,
             0 => ProbabPrimeResult::NotPrime,
@@ -292,8 +307,7 @@ impl Mpz {
             let mut g = Mpz::new();
             let mut s = Mpz::new();
             let mut t = Mpz::new();
-            __gmpz_gcdext(&mut g.mpz, &mut s.mpz, &mut t.mpz,
-                          &self.mpz, &other.mpz);
+            __gmpz_gcdext(&mut g.mpz, &mut s.mpz, &mut t.mpz, &self.mpz, &other.mpz);
             (g, s, t)
         }
     }
@@ -307,9 +321,7 @@ impl Mpz {
     }
 
     pub fn is_multiple_of(&self, other: &Mpz) -> bool {
-        unsafe {
-            __gmpz_divisible_p(&self.mpz, &other.mpz) != 0
-        }
+        unsafe { __gmpz_divisible_p(&self.mpz, &other.mpz) != 0 }
     }
 
     #[inline]
@@ -368,13 +380,13 @@ impl Mpz {
             res
         }
     }
-    
+
     pub fn ui_pow_ui(x: u32, y: u32) -> Mpz {
-    	unsafe {
-    		let mut res = Mpz::new();
-    		__gmpz_ui_pow_ui(&mut res.mpz, x as c_ulong, y as c_ulong);
-    		res
-    	}
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_ui_pow_ui(&mut res.mpz, x as c_ulong, y as c_ulong);
+            res
+        }
     }
 
     pub fn hamdist(&self, other: &Mpz) -> usize {
@@ -401,10 +413,9 @@ impl Mpz {
         assert!(self.mpz._mp_size >= 0);
         unsafe {
             let mut res = Mpz::new();
-            let _perfect_root
-                = match __gmpz_root(&mut res.mpz, &self.mpz, n as c_ulong) {
-                    0 => false,
-                    _ => true,
+            let _perfect_root = match __gmpz_root(&mut res.mpz, &self.mpz, n as c_ulong) {
+                0 => false,
+                _ => true,
             };
             // TODO: consider returning `_perfect_root`
             res
@@ -421,9 +432,7 @@ impl Mpz {
     }
 
     pub fn millerrabin(&self, reps: i32) -> i32 {
-        unsafe {
-            __gmpz_millerrabin(&self.mpz, reps as c_int)
-        }
+        unsafe { __gmpz_millerrabin(&self.mpz, reps as c_int) }
     }
 
     pub fn sign(&self) -> Sign {
@@ -445,7 +454,9 @@ impl Mpz {
         }
     }
 
-    pub fn zero() -> Mpz { Mpz::new() }
+    pub fn zero() -> Mpz {
+        Mpz::new()
+    }
 
     pub fn is_zero(&self) -> bool {
         self.mpz._mp_size == 0
@@ -454,7 +465,7 @@ impl Mpz {
 
 #[derive(Debug)]
 pub struct ParseMpzError {
-    _priv: ()
+    _priv: (),
 }
 
 impl fmt::Display for ParseMpzError {
@@ -483,7 +494,7 @@ impl Clone for Mpz {
     }
 }
 
-impl Eq for Mpz { }
+impl Eq for Mpz {}
 
 impl PartialEq for Mpz {
     fn eq(&self, other: &Mpz) -> bool {
@@ -514,201 +525,203 @@ impl PartialOrd for Mpz {
 
 // This macro inserts a guard against division by 0 for Div and Rem implementations
 macro_rules! div_guard {
-	(Div, $is_zero: expr) => {
-		if $is_zero {
+    (Div, $is_zero: expr) => {
+        if $is_zero {
             panic!("divide by zero")
-    	}
-	};
-	(Rem, $is_zero: expr) => {
-		if $is_zero {
+        }
+    };
+    (Rem, $is_zero: expr) => {
+        if $is_zero {
             panic!("divide by zero")
-    	}
-	};
-	($tr: ident, $is_zero: expr) => {}
+        }
+    };
+    ($tr: ident, $is_zero: expr) => {}
 }
 
 // On Windows c_long and c_ulong are only 32-bit - in order to implement operations for
 // 64-bit types we need some workarounds
 macro_rules! bit_guard {
-	(u64, $what: ident, $e1: expr, $e2: expr) => (
-    	if size_of::<c_ulong>() == 8 || $what <= u32::MAX as u64 {
+    (u64, $what: ident, $e1: expr, $e2: expr) => (
+        if size_of::<c_ulong>() == 8 || $what <= u32::MAX as u64 {
             $e1
         }
-    	else {
-    		$e2
-    	}
-	);
-	
-	(i64, $what: ident, $e1: expr, $e2: expr) => (
-    	if size_of::<c_long>() == 8 || $what <= i32::MAX as i64 {
+        else {
+            $e2
+        }
+    );
+
+    (i64, $what: ident, $e1: expr, $e2: expr) => (
+        if size_of::<c_long>() == 8 || $what <= i32::MAX as i64 {
             $e1
         }
-    	else {
-    		$e2
-    	}
-	);
-	
-	(u32, $what: ident, $e1: expr, $e2: expr) => ($e1);
-	
-	(i32, $what: ident, $e1: expr, $e2: expr) => ($e1);
+        else {
+            $e2
+        }
+    );
+
+    (u32, $what: ident, $e1: expr, $e2: expr) => ($e1);
+
+    (i32, $what: ident, $e1: expr, $e2: expr) => ($e1);
 }
 
 macro_rules! impl_oper {
-	($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
-		impl $tr<Mpz> for Mpz {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(self, other: Mpz) -> Mpz {
-				self.$meth(&other)
-			}
-		}
-		
-		impl<'a> $tr<&'a Mpz> for Mpz {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(mut self, other: &Mpz) -> Mpz {
-				self.$meth_assign(other);
-				self
-			}
-		}
-		
-		impl<'a> $tr<Mpz> for &'a Mpz {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(self, mut other: Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, other.is_zero());
-					$fun(&mut other.mpz, &self.mpz, &other.mpz);
-					other
-				}
-			}
-		}
-		
-		impl<'a, 'b> $tr<&'b Mpz> for &'a Mpz {
-			type Output = Mpz;
-			fn $meth(self, other: &Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, other.is_zero());
-					let mut res = Mpz::new();
-					$fun(&mut res.mpz, &self.mpz, &other.mpz);
-					res
-				}
-			}
-		}
-		
-		impl $tr_assign<Mpz> for Mpz {
-			#[inline]
-			fn $meth_assign(&mut self, other: Mpz) {
-				self.$meth_assign(&other)
-			}
-		}
-		
-		impl<'a> $tr_assign<&'a Mpz> for Mpz {
-			#[inline]
-			fn $meth_assign(&mut self, other: &Mpz) {
-				unsafe {
-					div_guard!($tr, other.is_zero());
-					$fun(&mut self.mpz, &self.mpz, &other.mpz);
-				}
-			}
-		}
-	};
-	
-	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
-		impl_oper!(normal $num, $cnum, $tr, $meth, $tr_assign, $meth_assign, $fun);
-		
-		impl $tr<Mpz> for $num {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(self, mut other: Mpz) -> Mpz {
-				unsafe {
-					bit_guard!($num, self, {
-		            	$fun(&mut other.mpz, &other.mpz, self as $cnum);
-		            	other
-		        	}, other.$meth(Mpz::from(self)))
-				}
-			}
-		}
-		
-		impl<'a> $tr<&'a Mpz> for $num {
-			type Output = Mpz;
-			fn $meth(self, other: &'a Mpz) -> Mpz {
-				unsafe {
-					bit_guard!($num, self, {
-			            let mut res = Mpz::new();
-			            $fun(&mut res.mpz, &other.mpz, self as $cnum);
-			            res
-		            }, other.$meth(Mpz::from(self)))
-				}
-			}
-		}
-	};
-	
-	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
-		impl $tr<$num> for Mpz {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(mut self, other: $num) -> Mpz {
-				self.$meth_assign(other);
-				self
-			}
-		}
-		
-		impl<'a> $tr<$num> for &'a Mpz {
-			type Output = Mpz;
-			fn $meth(self, other: $num) -> Mpz {
-		        unsafe {
-					div_guard!($tr, other == 0);
-		        	bit_guard!($num, other, {
-			            let mut res = Mpz::new();
-			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
-			            res
-		            }, self.$meth(Mpz::from(other)))
-		        }
-			}
-		}
-		
-		impl $tr_assign<$num> for Mpz {
-			#[inline]
-			fn $meth_assign(&mut self, other: $num) {
-				unsafe {
-					div_guard!($tr, other == 0);
-					bit_guard!($num, other,
-						$fun(&mut self.mpz, &self.mpz, other as $cnum),
-						self.$meth_assign(Mpz::from(other)))
-				}
-			}
-		}
-	};
-	
-	(reverse $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
-		impl $tr<Mpz> for $num {
-			type Output = Mpz;
-			#[inline]
-			fn $meth(self, mut other: Mpz) -> Mpz {
-				unsafe {
-					bit_guard!($num, self, {
-		            	$fun(&mut other.mpz, self as $cnum, &other.mpz);
-		            	other
-		        	}, Mpz::from(self).$meth(other))
-				}
-			}
-		}
-		
-		impl<'a> $tr<&'a Mpz> for $num {
-			type Output = Mpz;
-			fn $meth(self, other: &'a Mpz) -> Mpz {
-				unsafe {
-					bit_guard!($num, self, {
-			            let mut res = Mpz::new();
-			            $fun(&mut res.mpz, self as $cnum, &other.mpz);
-			            res
-		            }, Mpz::from(self).$meth(other))
-				}
-			}
-		}
-	};
-	
+    ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+        impl $tr<Mpz> for Mpz {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(self, other: Mpz) -> Mpz {
+                self.$meth(&other)
+            }
+        }
+
+        impl<'a> $tr<&'a Mpz> for Mpz {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(mut self, other: &Mpz) -> Mpz {
+                self.$meth_assign(other);
+                self
+            }
+        }
+
+        impl<'a> $tr<Mpz> for &'a Mpz {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(self, mut other: Mpz) -> Mpz {
+                unsafe {
+                    div_guard!($tr, other.is_zero());
+                    $fun(&mut other.mpz, &self.mpz, &other.mpz);
+                    other
+                }
+            }
+        }
+
+        impl<'a, 'b> $tr<&'b Mpz> for &'a Mpz {
+            type Output = Mpz;
+            fn $meth(self, other: &Mpz) -> Mpz {
+                unsafe {
+                    div_guard!($tr, other.is_zero());
+                    let mut res = Mpz::new();
+                    $fun(&mut res.mpz, &self.mpz, &other.mpz);
+                    res
+                }
+            }
+        }
+
+        impl $tr_assign<Mpz> for Mpz {
+            #[inline]
+            fn $meth_assign(&mut self, other: Mpz) {
+                self.$meth_assign(&other)
+            }
+        }
+
+        impl<'a> $tr_assign<&'a Mpz> for Mpz {
+            #[inline]
+            fn $meth_assign(&mut self, other: &Mpz) {
+                unsafe {
+                    div_guard!($tr, other.is_zero());
+                    $fun(&mut self.mpz, &self.mpz, &other.mpz);
+                }
+            }
+        }
+    };
+
+    (both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident,
+     $meth_assign: ident, $fun: ident) => {
+        impl_oper!(normal $num, $cnum, $tr, $meth, $tr_assign, $meth_assign, $fun);
+
+        impl $tr<Mpz> for $num {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(self, mut other: Mpz) -> Mpz {
+                unsafe {
+                    bit_guard!($num, self, {
+                        $fun(&mut other.mpz, &other.mpz, self as $cnum);
+                        other
+                    }, other.$meth(Mpz::from(self)))
+                }
+            }
+        }
+
+        impl<'a> $tr<&'a Mpz> for $num {
+            type Output = Mpz;
+            fn $meth(self, other: &'a Mpz) -> Mpz {
+                unsafe {
+                    bit_guard!($num, self, {
+                        let mut res = Mpz::new();
+                        $fun(&mut res.mpz, &other.mpz, self as $cnum);
+                        res
+                    }, other.$meth(Mpz::from(self)))
+                }
+            }
+        }
+    };
+
+    (normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident,
+     $meth_assign: ident, $fun: ident) => {
+        impl $tr<$num> for Mpz {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(mut self, other: $num) -> Mpz {
+                self.$meth_assign(other);
+                self
+            }
+        }
+
+        impl<'a> $tr<$num> for &'a Mpz {
+            type Output = Mpz;
+            fn $meth(self, other: $num) -> Mpz {
+                unsafe {
+                    div_guard!($tr, other == 0);
+                    bit_guard!($num, other, {
+                        let mut res = Mpz::new();
+                        $fun(&mut res.mpz, &self.mpz, other as $cnum);
+                        res
+                    }, self.$meth(Mpz::from(other)))
+                }
+            }
+        }
+
+        impl $tr_assign<$num> for Mpz {
+            #[inline]
+            fn $meth_assign(&mut self, other: $num) {
+                unsafe {
+                    div_guard!($tr, other == 0);
+                    bit_guard!($num, other,
+                               $fun(&mut self.mpz, &self.mpz, other as $cnum),
+                               self.$meth_assign(Mpz::from(other)))
+                }
+            }
+        }
+    };
+
+    (reverse $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+        impl $tr<Mpz> for $num {
+            type Output = Mpz;
+            #[inline]
+            fn $meth(self, mut other: Mpz) -> Mpz {
+                unsafe {
+                    bit_guard!($num, self, {
+                        $fun(&mut other.mpz, self as $cnum, &other.mpz);
+                        other
+                    }, Mpz::from(self).$meth(other))
+                }
+            }
+        }
+
+        impl<'a> $tr<&'a Mpz> for $num {
+            type Output = Mpz;
+            fn $meth(self, other: &'a Mpz) -> Mpz {
+                unsafe {
+                    bit_guard!($num, self, {
+                        let mut res = Mpz::new();
+                        $fun(&mut res.mpz, self as $cnum, &other.mpz);
+                        res
+                    }, Mpz::from(self).$meth(other))
+                }
+            }
+        }
+    };
+
 }
 
 impl_oper!(Add, add, AddAssign, add_assign, __gmpz_add);
@@ -716,7 +729,7 @@ impl_oper!(both u64, c_ulong, Add, add, AddAssign, add_assign, __gmpz_add_ui);
 
 impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpz_sub);
 impl_oper!(normal u64, c_ulong, Sub, sub, SubAssign, sub_assign, __gmpz_sub_ui);
-impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub); 
+impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub);
 
 impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpz_mul);
 impl_oper!(both i64, c_long, Mul, mul, MulAssign, mul_assign, __gmpz_mul_si);
@@ -779,7 +792,13 @@ impl<'b> From<&'b Mpz> for Vec<u8> {
             let bit_size = size_of::<u8>() * 8;
             let size = (__gmpz_sizeinbase(&other.mpz, 2) + bit_size - 1) / bit_size;
             let mut result: Vec<u8> = vec!(0; size);
-            __gmpz_export(result.as_mut_ptr() as *mut c_void, 0 as *mut size_t, 1, size_of::<u8>() as size_t, 0, 0, &other.mpz);
+            __gmpz_export(result.as_mut_ptr() as *mut c_void,
+                          0 as *mut size_t,
+                          1,
+                          size_of::<u8>() as size_t,
+                          0,
+                          0,
+                          &other.mpz);
             result
         }
     }
@@ -798,8 +817,14 @@ impl<'b> From<&'b Mpz> for Option<i64> {
             }
 
             if __gmpz_sizeinbase(&to_export.mpz, 2) <= 63 {
-                let mut result : i64 = 0;
-                __gmpz_export(&mut result as *mut i64 as *mut c_void, 0 as *mut size_t, -1, size_of::<i64>() as size_t, 0, 0, &to_export.mpz);
+                let mut result: i64 = 0;
+                __gmpz_export(&mut result as *mut i64 as *mut c_void,
+                              0 as *mut size_t,
+                              -1,
+                              size_of::<i64>() as size_t,
+                              0,
+                              0,
+                              &to_export.mpz);
                 if negative {
                     Some(result ^ -1i64)
                 } else {
@@ -816,8 +841,14 @@ impl<'b> From<&'b Mpz> for Option<u64> {
     fn from(other: &Mpz) -> Option<u64> {
         unsafe {
             if __gmpz_sizeinbase(&other.mpz, 2) <= 64 && other.mpz._mp_size >= 0 {
-                let mut result : u64 = 0;
-                __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &other.mpz);
+                let mut result: u64 = 0;
+                __gmpz_export(&mut result as *mut u64 as *mut c_void,
+                              0 as *mut size_t,
+                              -1,
+                              size_of::<u64>() as size_t,
+                              0,
+                              0,
+                              &other.mpz);
                 Some(result)
             } else {
                 None
@@ -828,9 +859,7 @@ impl<'b> From<&'b Mpz> for Option<u64> {
 
 impl<'a> From<&'a Mpz> for f64 {
     fn from(other: &Mpz) -> f64 {
-        unsafe {
-            __gmpz_get_d(&other.mpz) as f64
-        }
+        unsafe { __gmpz_get_d(&other.mpz) as f64 }
     }
 }
 
@@ -838,8 +867,13 @@ impl<'a> From<&'a [u8]> for Mpz {
     fn from(other: &'a [u8]) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, other.len(), 1, size_of::<u8>() as size_t,
-                          0, 0, other.as_ptr() as *const c_void);
+            __gmpz_import(&mut res.mpz,
+                          other.len(),
+                          1,
+                          size_of::<u8>() as size_t,
+                          0,
+                          0,
+                          other.as_ptr() as *const c_void);
             res
         }
     }
@@ -849,7 +883,12 @@ impl From<u64> for Mpz {
     fn from(other: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, -1, size_of::<u64>() as size_t, 0, 0,
+            __gmpz_import(&mut res.mpz,
+                          1,
+                          -1,
+                          size_of::<u64>() as size_t,
+                          0,
+                          0,
                           &other as *const u64 as *const c_void);
             res
         }
@@ -860,7 +899,12 @@ impl From<u32> for Mpz {
     fn from(other: u32) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, -1, size_of::<u32>() as size_t, 0, 0,
+            __gmpz_import(&mut res.mpz,
+                          1,
+                          -1,
+                          size_of::<u32>() as size_t,
+                          0,
+                          0,
                           &other as *const u32 as *const c_void);
             res
         }
@@ -873,11 +917,21 @@ impl From<i64> for Mpz {
             let mut res = Mpz::new();
 
             if other.is_negative() {
-                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
+                __gmpz_import(&mut res.mpz,
+                              1,
+                              -1,
+                              size_of::<i64>() as size_t,
+                              0,
+                              0,
                               &(other ^ -1i64) as *const i64 as *const c_void);
                 __gmpz_com(&mut res.mpz, &res.mpz);
             } else {
-                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
+                __gmpz_import(&mut res.mpz,
+                              1,
+                              -1,
+                              size_of::<i64>() as size_t,
+                              0,
+                              0,
                               &other as *const i64 as *const c_void);
             }
             res
@@ -891,11 +945,21 @@ impl From<i32> for Mpz {
             let mut res = Mpz::new();
 
             if other.is_negative() {
-                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i32>() as size_t, 0, 0,
+                __gmpz_import(&mut res.mpz,
+                              1,
+                              -1,
+                              size_of::<i32>() as size_t,
+                              0,
+                              0,
                               &(other ^ -1i32) as *const i32 as *const c_void);
                 __gmpz_com(&mut res.mpz, &res.mpz);
             } else {
-                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i32>() as size_t, 0, 0,
+                __gmpz_import(&mut res.mpz,
+                              1,
+                              -1,
+                              size_of::<i32>() as size_t,
+                              0,
+                              0,
                               &other as *const i32 as *const c_void);
             }
             res
@@ -989,11 +1053,11 @@ impl fmt::Debug for Mpz {
 impl hash::Hash for Mpz {
     fn hash<S: hash::Hasher>(&self, state: &mut S) {
         unsafe {
-			for i in 0..self.mpz._mp_size.abs() {
-				let limb = self.mpz._mp_d as *const mp_limb_t;
-            	let limb = *(limb.offset(i as isize));
-           		limb.hash(state);
-			}
+            for i in 0..self.mpz._mp_size.abs() {
+                let limb = self.mpz._mp_d as *const mp_limb_t;
+                let limb = *(limb.offset(i as isize));
+                limb.hash(state);
+            }
         }
     }
 }
@@ -1016,4 +1080,3 @@ impl One for Mpz {
         Mpz::one()
     }
 }
-
