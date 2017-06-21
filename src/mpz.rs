@@ -35,6 +35,7 @@ extern "C" {
     fn __gmpz_init2(x: mpz_ptr, n: mp_bitcnt_t);
     fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_init_set_ui(rop: mpz_ptr, op: c_ulong);
+    fn __gmpz_init_set_si(rop: mpz_ptr, op: c_long);
     fn __gmpz_init_set_str(rop: mpz_ptr, s: *const c_char, base: c_int) -> c_int;
     fn __gmpz_clear(x: mpz_ptr);
     fn __gmpz_realloc2(x: mpz_ptr, n: mp_bitcnt_t);
@@ -213,6 +214,22 @@ impl Mpz {
                 Err(ParseMpzError { _priv: () })
             }
         }
+    }
+
+    pub fn from_ui(x: c_ulong) -> Mpz {
+        let mut res = Mpz::new();
+        unsafe {
+            __gmpz_init_set_ui(res.inner_mut(), x);
+        }
+        res
+    }
+
+    pub fn from_si(x: c_long) -> Mpz {
+        let mut res = Mpz::new();
+        unsafe {
+            __gmpz_init_set_si(res.inner_mut(), x);
+        }
+        res
     }
 
     pub fn set(&mut self, other: &Mpz) {
