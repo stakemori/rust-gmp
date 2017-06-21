@@ -49,6 +49,7 @@ extern "C" {
     fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
     fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
+    fn __gmpz_cmp_si(op1: mpz_srcptr, op2: c_long) -> c_int;
     fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_add_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -506,17 +507,11 @@ impl Ord for Mpz {
     }
 }
 
-impl PartialEq<c_ulong> for Mpz {
-    fn eq(&self, other: &c_ulong) -> bool {
-        unsafe { __gmpz_cmp_ui(&self.mpz, *other) == 0 }
-    }
-}
+impl_part_eq!(Mpz, c_ulong, __gmpz_cmp_ui);
+impl_part_cmp!(Mpz, c_ulong, __gmpz_cmp_ui);
 
-impl PartialOrd<c_ulong> for Mpz {
-    fn partial_cmp(&self, other: &c_ulong) -> Option<Ordering> {
-        Some(int_to_ord!(unsafe { __gmpz_cmp_ui(&self.mpz, *other) }))
-    }
-}
+impl_part_eq!(Mpz, c_long, __gmpz_cmp_si);
+impl_part_cmp!(Mpz, c_long, __gmpz_cmp_si);
 
 impl PartialOrd for Mpz {
     fn partial_cmp(&self, other: &Mpz) -> Option<Ordering> {

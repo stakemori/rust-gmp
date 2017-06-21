@@ -24,6 +24,7 @@ mod mpz {
 
     use std::hash::{Hash, Hasher};
     use std::collections::hash_map::DefaultHasher;
+    use libc::{c_ulong, c_long};
 
     #[test]
     fn test_set() {
@@ -87,12 +88,14 @@ mod mpz {
         let y: Mpz = FromStr::from_str("45000000000000000000000").unwrap();
         let z: Mpz = FromStr::from_str("50000000000000000000000").unwrap();
         let w: Mpz = FromStr::from_str("2323").unwrap();
+        let a: Mpz = FromStr::from_str("-1000").unwrap();
 
         assert!(x < y && x < z && y < z);
         assert!(x <= x && x <= y && x <= z && y <= z);
         assert!(z > y && z > x && y > x);
         assert!(z >= z && z >= y && z >= x && y >= x);
-        assert!(x > 1000 && w < 3000 && w == 2323);
+        assert!(x > 1000 as c_ulong && w < 3000 as c_ulong && w == 2323 as c_ulong);
+        assert!(x > -199 as c_long && a == -1000 as c_long && a < -999 as c_long);
     }
 
     #[test]
