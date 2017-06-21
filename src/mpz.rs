@@ -496,14 +496,7 @@ impl PartialEq for Mpz {
 
 impl Ord for Mpz {
     fn cmp(&self, other: &Mpz) -> Ordering {
-        let cmp = unsafe { __gmpz_cmp(&self.mpz, &other.mpz) };
-        if cmp == 0 {
-            Equal
-        } else if cmp < 0 {
-            Less
-        } else {
-            Greater
-        }
+        int_to_ord!(unsafe { __gmpz_cmp(&self.mpz, &other.mpz) })
     }
 }
 
