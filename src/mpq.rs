@@ -413,7 +413,7 @@ impl fmt::Display for Mpq {
         let numer = self.get_num();
         let denom = self.get_den();
 
-        if denom == From::<i64>::from(1) {
+        if denom == 1 as c_ulong {
             write!(f, "{}", numer)
         } else {
             write!(f, "{}/{}", numer, denom)

@@ -506,6 +506,18 @@ impl Ord for Mpz {
     }
 }
 
+impl PartialEq<c_ulong> for Mpz {
+    fn eq(&self, other: &c_ulong) -> bool {
+        unsafe { __gmpz_cmp_ui(&self.mpz, *other) == 0 }
+    }
+}
+
+impl PartialOrd<c_ulong> for Mpz {
+    fn partial_cmp(&self, other: &c_ulong) -> Option<Ordering> {
+        Some(int_to_ord!(unsafe { __gmpz_cmp_ui(&self.mpz, *other) }))
+    }
+}
+
 impl PartialOrd for Mpz {
     fn partial_cmp(&self, other: &Mpz) -> Option<Ordering> {
         Some(self.cmp(other))

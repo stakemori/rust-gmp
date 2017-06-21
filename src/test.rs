@@ -86,11 +86,13 @@ mod mpz {
         let x: Mpz = FromStr::from_str("40000000000000000000000").unwrap();
         let y: Mpz = FromStr::from_str("45000000000000000000000").unwrap();
         let z: Mpz = FromStr::from_str("50000000000000000000000").unwrap();
+        let w: Mpz = FromStr::from_str("2323").unwrap();
 
         assert!(x < y && x < z && y < z);
         assert!(x <= x && x <= y && x <= z && y <= z);
         assert!(z > y && z > x && y > x);
         assert!(z >= z && z >= y && z >= x && y >= x);
+        assert!(x > 1000 && w < 3000 && w == 2323);
     }
 
     #[test]
@@ -188,7 +190,7 @@ mod mpz {
     fn test_from_int() {
         let x: Mpz = From::<i64>::from(150);
         assert!(x.to_string() == "150".to_string());
-        assert!(x == FromStr::from_str("150").unwrap());
+        assert!(x == Mpz::from_str_radix("150", 10).unwrap());
     }
 
     #[test]
