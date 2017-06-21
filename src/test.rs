@@ -591,6 +591,94 @@ mod mpz {
         assert_eq!(five.sign(), Sign::Positive);
         assert_eq!(minus_five.sign(), Sign::Negative);
     }
+
+    #[test]
+    fn test_mut_funcs() {
+        let mut x = Mpz::new();
+        let a = Mpz::from_ui(23);
+        let b = Mpz::from_si(-45);
+        let c = 201;
+        let d = -100;
+
+        x.add_mut(&a, &b);
+        assert_eq!(x, &a + &b);
+        x.add_ui_mut(&a, c);
+        assert_eq!(x, &a + c);
+
+        x.sub_mut(&a, &b);
+        assert_eq!(x, &a - &b);
+        x.sub_ui_mut(&a, c);
+        assert_eq!(x, &a - c);
+
+        x.mul_mut(&a, &b);
+        assert_eq!(x, &a * &b);
+        x.mul_ui_mut(&a, c);
+        assert_eq!(x, &a * c);
+        x.mul_si_mut(&a, d);
+        assert_eq!(x, &a * d);
+
+        x.set_ui(c);
+        x.addmul_mut(&a, &b);
+        assert_eq!(x, &a * &b + c);
+
+        x.set_si(d);
+        x.addmul_ui_mut(&a, c);
+        assert_eq!(x, &a * c + Mpz::from_si(d));
+
+        x.abs_mut(&Mpz::from_si(d));
+        assert_eq!(x, Mpz::from_si(d).abs());
+
+        x.set_si(d);
+        x.submul_mut(&a, &b);
+        assert_eq!(x, Mpz::from_si(d) - &a * &b);
+
+        x.set_si(d);
+        x.submul_ui_mut(&a, c);
+        assert_eq!(x, Mpz::from_si(d) - &a * c);
+
+        x.pow_ui_mut(&a, 3);
+        assert_eq!(x, a.pow(3));
+    }
+
+    #[test]
+    fn test_set_div_funcs() {
+        let a = Mpz::from_ui(10);
+        let b = Mpz::from_si(-3);
+        let c = 7;
+        let mut x = Mpz::new();
+
+        x.fdiv_q_mut(&a, &b);
+        assert_eq!(x, -4 as c_long);
+
+        x.fdiv_r_mut(&a, &b);
+        assert_eq!(x, -2 as c_long);
+
+        x.tdiv_q_mut(&a, &b);
+        assert_eq!(x, -3 as c_long);
+
+        x.tdiv_r_mut(&a, &b);
+        assert_eq!(x, 1 as c_long);
+
+        x.fdiv_q_ui_mut(&a, c);
+        assert_eq!(x, 1 as c_long);
+        x.fdiv_r_ui_mut(&a, c);
+        assert_eq!(x, 3 as c_long);
+
+        let mut q = Mpz::new();
+        let mut r = Mpz::new();
+
+        Mpz::cdiv_qr_mut(&mut q, &mut r, &a, &b);
+        assert_eq!(q, -3 as c_long);
+        assert_eq!(r, 1 as c_long);
+
+        Mpz::fdiv_qr_mut(&mut q, &mut r, &a, &b);
+        assert_eq!(q, -4 as c_long);
+        assert_eq!(r, -2 as c_long);
+
+        Mpz::tdiv_qr_mut(&mut q, &mut r, &a, &b);
+        assert_eq!(q, -3 as c_long);
+        assert_eq!(r, 1 as c_long);
+    }
 }
 
 mod rand {

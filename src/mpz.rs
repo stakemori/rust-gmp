@@ -44,7 +44,7 @@ extern "C" {
     fn __gmpz_get_str(s: *mut c_char, base: c_int, op: mpz_srcptr) -> *mut c_char;
     fn __gmpz_get_ui(op: mpz_srcptr) -> c_ulong;
     fn __gmpz_fits_ulong_p(op: mpz_srcptr) -> c_int;
-    fn __gmpz_get_si(op: mpz_srcptr) -> c_ulong;
+    fn __gmpz_get_si(op: mpz_srcptr) -> c_long;
     fn __gmpz_get_d(op: mpz_srcptr) -> c_double;
     fn __gmpz_fits_slong_p(op: mpz_srcptr) -> c_long;
     fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
@@ -64,8 +64,23 @@ extern "C" {
     fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_tdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_tdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
-    fn __gmpz_tdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong);
-    fn __gmpz_tdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong);
+    fn __gmpz_cdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+
+    // Return value is the remainder
+    fn __gmpz_tdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+    fn __gmpz_tdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+    fn __gmpz_fdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+    fn __gmpz_fdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+    fn __gmpz_cdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+    fn __gmpz_cdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong) -> c_ulong;
+
+    fn __gmpz_fdiv_qr(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: mpz_srcptr);
+    fn __gmpz_fdiv_qr_ui(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: c_ulong) -> c_ulong;
+    fn __gmpz_cdiv_qr(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: mpz_srcptr);
+    fn __gmpz_cdiv_qr_ui(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: c_ulong) -> c_ulong;
+    fn __gmpz_tdiv_qr(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: mpz_srcptr);
+    fn __gmpz_tdiv_qr_ui(arg1: mpz_ptr, arg2: mpz_ptr, arg3: mpz_srcptr, arg4: c_ulong) -> c_ulong;
+
     fn __gmpz_fdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
     fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
@@ -113,6 +128,14 @@ extern "C" {
     fn __gmpz_millerrabin(n: mpz_srcptr, reps: c_int) -> c_int;
     fn __gmpz_urandomb(rop: mpz_ptr, state: gmp_randstate_t, n: mp_bitcnt_t);
     fn __gmpz_urandomm(rop: mpz_ptr, state: gmp_randstate_t, n: mpz_srcptr);
+
+    fn __gmpz_addmul(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: mpz_srcptr);
+    fn __gmpz_addmul_ui(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: c_ulong);
+    fn __gmpz_submul(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: mpz_srcptr);
+    fn __gmpz_submul_ui(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: c_ulong);
+
+    pub fn __gmpz_set_ui(arg1: mpz_ptr, arg2: c_ulong);
+    pub fn __gmpz_set_si(arg1: mpz_ptr, arg2: c_long);
 }
 
 pub struct Mpz {
@@ -235,6 +258,22 @@ impl Mpz {
             __gmpz_init_set_si(res.inner_mut(), x);
         }
         res
+    }
+
+    pub fn into_ui(&self) -> Option<c_ulong> {
+        if unsafe { __gmpz_fits_ulong_p(self.inner()) == 0 } {
+            None
+        } else {
+            Some(unsafe { __gmpz_get_ui(self.inner()) })
+        }
+    }
+
+    pub fn into_si(&self) -> Option<c_long> {
+        if unsafe { __gmpz_fits_slong_p(self.inner()) == 0 } {
+            None
+        } else {
+            Some(unsafe { __gmpz_get_si(self.inner()) })
+        }
     }
 
     pub fn set(&mut self, other: &Mpz) {
@@ -475,6 +514,184 @@ impl Mpz {
     pub fn is_zero(&self) -> bool {
         self.mpz._mp_size == 0
     }
+
+    impl_c_wrapper!(set_ui, __gmpz_set_ui, Ui, "self = x");
+    impl_c_wrapper!(set_si, __gmpz_set_si, Si, "self = x");
+
+    // low level functions
+    /// self = -self
+    pub fn negate(&mut self) {
+        unsafe{
+            __gmpz_neg(self.inner_mut(), self.inner());
+        }
+    }
+
+    impl_c_wrapper!(neg_mut, __gmpz_neg, Mpz, "self = -x");
+
+    impl_c_wrapper!(add_mut, __gmpz_add, Mpz, Mpz, "self = x + y");
+    impl_c_wrapper!(add_ui_mut, __gmpz_add_ui, Mpz, Ui, "self = x + y");
+
+    impl_c_wrapper!(sub_mut, __gmpz_sub, Mpz, Mpz, "self = x - y");
+    impl_c_wrapper!(sub_ui_mut, __gmpz_sub_ui, Mpz, Ui, "self = x - y");
+
+    impl_c_wrapper!(mul_mut, __gmpz_mul, Mpz, Mpz, "self = x * y");
+    impl_c_wrapper!(mul_ui_mut, __gmpz_mul_ui, Mpz, Ui, "self = x * y");
+    impl_c_wrapper!(mul_si_mut, __gmpz_mul_si, Mpz, Si, "self = x * y");
+
+    impl_c_wrapper!(abs_mut, __gmpz_abs, Mpz, "self = |x|");
+
+    impl_c_wrapper!(addmul_mut, __gmpz_addmul, Mpz, Mpz, "self += x*y");
+    impl_c_wrapper!(addmul_ui_mut, __gmpz_addmul_ui, Mpz, Ui, "self += x*y");
+
+    impl_c_wrapper!(submul_mut, __gmpz_submul, Mpz, Mpz, "self -= x*y");
+    impl_c_wrapper!(submul_ui_mut, __gmpz_submul_ui, Mpz, Ui, "self -= x*y");
+
+    impl_c_wrapper!(pow_ui_mut, __gmpz_pow_ui, Mpz, Ui, "self = x**y");
+
+    impl_c_wrapper!(gcd_mut, __gmpz_gcd, Mpz, Mpz, "self = gcd(x, y)");
+    impl_c_wrapper!(lcm_mut, __gmpz_lcm, Mpz, Mpz, "self = lcm(x, y)");
+
+
+    impl_c_wrapper!(
+        tdiv_q_mut,
+        __gmpz_tdiv_q,
+        Mpz,
+        Mpz,
+        "self = x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        tdiv_r_mut,
+        __gmpz_tdiv_r,
+        Mpz,
+        Mpz,
+        "self = the reminder of x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        fdiv_q_mut,
+        __gmpz_fdiv_q,
+        Mpz,
+        Mpz,
+        "self = x/y. Rounds the quotient to -infinity."
+    );
+    impl_c_wrapper!(
+        fdiv_r_mut,
+        __gmpz_fdiv_r,
+        Mpz,
+        Mpz,
+        "self = the reminder of x/y. Rounds the quotient to -infinity."
+    );
+    impl_c_wrapper!(
+        cdiv_q_mut,
+        __gmpz_cdiv_q,
+        Mpz,
+        Mpz,
+        "self = x/y. Rounds the quotient to +infinity."
+    );
+    impl_c_wrapper!(
+        cdiv_r_mut,
+        __gmpz_cdiv_r,
+        Mpz,
+        Mpz,
+        "self = the reminder of x/y. Rounds the quotient to +infinity."
+    );
+    impl_c_wrapper!(
+        tdiv_q_ui_mut,
+        __gmpz_tdiv_q_ui,
+        Mpz,
+        Ui,
+        "self = x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        tdiv_r_ui_mut,
+        __gmpz_tdiv_r_ui,
+        Mpz,
+        Ui,
+        "self = the reminder of x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        fdiv_q_ui_mut,
+        __gmpz_fdiv_q_ui,
+        Mpz,
+        Ui,
+        "self = x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        fdiv_r_ui_mut,
+        __gmpz_fdiv_r_ui,
+        Mpz,
+        Ui,
+        "self = the reminder of x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        cdiv_q_ui_mut,
+        __gmpz_cdiv_q_ui,
+        Mpz,
+        Ui,
+        "self = x/y. Rounds the quotient to zero."
+    );
+    impl_c_wrapper!(
+        cdiv_r_ui_mut,
+        __gmpz_cdiv_r_ui,
+        Mpz,
+        Ui,
+        "self = the reminder of x/y. Rounds the quotient to zero."
+    );
+
+    /// self = x - y.
+    pub fn set_ui_sub(&mut self, x: c_ulong, y: &Mpz) {
+        unsafe {
+            __gmpz_ui_sub(self.inner_mut(), x, y.inner());
+        }
+    }
+
+    pub fn fdiv_qr_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: &Mpz) {
+        unsafe {
+            __gmpz_fdiv_qr(q.inner_mut(), r.inner_mut(), n.inner(), d.inner());
+        }
+    }
+
+    pub fn fdiv_qr_ui_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: c_ulong) {
+        unsafe {
+            __gmpz_fdiv_qr_ui(q.inner_mut(), r.inner_mut(), n.inner(), d);
+        }
+    }
+
+    pub fn tdiv_qr_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: &Mpz) {
+        unsafe {
+            __gmpz_tdiv_qr(q.inner_mut(), r.inner_mut(), n.inner(), d.inner());
+        }
+    }
+
+    pub fn tdiv_qr_ui_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: c_ulong) {
+        unsafe {
+            __gmpz_tdiv_qr_ui(q.inner_mut(), r.inner_mut(), n.inner(), d);
+        }
+    }
+
+    pub fn cdiv_qr_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: &Mpz) {
+        unsafe {
+            __gmpz_cdiv_qr(q.inner_mut(), r.inner_mut(), n.inner(), d.inner());
+        }
+    }
+
+    pub fn cdiv_qr_ui_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: c_ulong) {
+        unsafe {
+            __gmpz_cdiv_qr_ui(q.inner_mut(), r.inner_mut(), n.inner(), d);
+        }
+    }
+
+    // number theoritic functions.
+    pub fn gcdext_mut(g: &mut Mpz, s: &mut Mpz, t: &mut Mpz, a: &Mpz, b: &Mpz) {
+        unsafe {
+            __gmpz_gcdext(
+                g.inner_mut(),
+                s.inner_mut(),
+                t.inner_mut(),
+                a.inner(),
+                b.inner(),
+            );
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -696,7 +913,7 @@ macro_rules! impl_oper {
                 unsafe {
                     div_guard!($tr, other == 0);
                     bit_guard!($num, other,
-                               $fun(&mut self.mpz, &self.mpz, other as $cnum),
+                               {$fun(&mut self.mpz, &self.mpz, other as $cnum);},
                                self.$meth_assign(Mpz::from(other)))
                 }
             }
