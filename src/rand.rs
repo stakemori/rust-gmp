@@ -15,10 +15,12 @@ pub type gmp_randstate_t = *mut gmp_randstate_struct;
 extern "C" {
     fn __gmp_randinit_default(state: gmp_randstate_t);
     fn __gmp_randinit_mt(state: gmp_randstate_t);
-    fn __gmp_randinit_lc_2exp(state: gmp_randstate_t,
-                              a: mpz_srcptr,
-                              c: c_ulong,
-                              m2exp: mp_bitcnt_t);
+    fn __gmp_randinit_lc_2exp(
+        state: gmp_randstate_t,
+        a: mpz_srcptr,
+        c: c_ulong,
+        m2exp: mp_bitcnt_t,
+    );
     fn __gmp_randinit_lc_2exp_size(state: gmp_randstate_t, size: mp_bitcnt_t);
     fn __gmp_randinit_set(state: gmp_randstate_t, op: *const gmp_randstate_struct);
     fn __gmp_randclear(state: gmp_randstate_t);

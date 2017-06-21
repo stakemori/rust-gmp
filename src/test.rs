@@ -10,8 +10,9 @@ extern "C" {
 #[test]
 fn test_limb_size() {
     // We are assuming that the limb size is the same as the pointer size.
-    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8,
-               unsafe { __gmp_bits_per_limb as usize });
+    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, unsafe {
+        __gmp_bits_per_limb as usize
+    });
 }
 
 mod mpz {
@@ -433,8 +434,24 @@ mod mpz {
     fn test_bit_fiddling() {
         let mut xs: Mpz = From::<i64>::from(0b1010_1000_0010_0011);
         assert!(xs.bit_length() == 16);
-        let mut ys = [true, false, true, false, true, false, false, false, false, false, true,
-                      false, false, false, true, true];
+        let mut ys = [
+            true,
+            false,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            true,
+            true,
+        ];
         ys.reverse();
         for i in 0..xs.bit_length() {
             assert!(xs.tstbit(i) == ys[i]);
@@ -519,8 +536,10 @@ mod mpz {
         assert_eq!(Into::<Vec<u8>>::into(&one), vec![1u8]);
         assert_eq!(Into::<Vec<u8>>::into(&five), vec![5u8]);
         assert_eq!(Into::<Vec<u8>>::into(&xffff), vec![255u8, 255u8]);
-        assert_eq!(Into::<Vec<u8>>::into(&max_u64),
-                   vec![255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8]);
+        assert_eq!(
+            Into::<Vec<u8>>::into(&max_u64),
+            vec![255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8]
+        );
     }
 
     #[test]
@@ -686,12 +705,18 @@ mod mpq {
         let minus_one = -&one;
         let two = &one + &one;
 
-        assert_eq!(Mpq::from_str_radix("1/-1", 10).unwrap(),
-                   Mpq::ratio(&minus_one, &one));
-        assert_eq!(Mpq::from_str_radix("0/2", 10).unwrap(),
-                   Mpq::ratio(&zero, &one));
-        assert_eq!(Mpq::from_str_radix("2/4", 10).unwrap(),
-                   Mpq::ratio(&one, &two));
+        assert_eq!(
+            Mpq::from_str_radix("1/-1", 10).unwrap(),
+            Mpq::ratio(&minus_one, &one)
+        );
+        assert_eq!(
+            Mpq::from_str_radix("0/2", 10).unwrap(),
+            Mpq::ratio(&zero, &one)
+        );
+        assert_eq!(
+            Mpq::from_str_radix("2/4", 10).unwrap(),
+            Mpq::ratio(&one, &two)
+        );
     }
 }
 
