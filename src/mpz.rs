@@ -768,30 +768,22 @@ macro_rules! impl_oper {
     ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
         impl $tr<Mpz> for Mpz {
             type Output = Mpz;
-            #[inline]
             fn $meth(self, other: Mpz) -> Mpz {
-                self.$meth(&other)
+                (&self).$meth(&other)
             }
         }
 
         impl<'a> $tr<&'a Mpz> for Mpz {
             type Output = Mpz;
-            #[inline]
-            fn $meth(mut self, other: &Mpz) -> Mpz {
-                self.$meth_assign(other);
-                self
+            fn $meth(self, other: &Mpz) -> Mpz {
+                (&self).$meth(other)
             }
         }
 
         impl<'a> $tr<Mpz> for &'a Mpz {
             type Output = Mpz;
-            #[inline]
-            fn $meth(self, mut other: Mpz) -> Mpz {
-                unsafe {
-                    div_guard!($tr, other.is_zero());
-                    $fun(&mut other.mpz, &self.mpz, &other.mpz);
-                    other
-                }
+            fn $meth(self, other: Mpz) -> Mpz {
+                self.$meth(&other)
             }
         }
 
@@ -808,14 +800,12 @@ macro_rules! impl_oper {
         }
 
         impl $tr_assign<Mpz> for Mpz {
-            #[inline]
             fn $meth_assign(&mut self, other: Mpz) {
                 self.$meth_assign(&other)
             }
         }
 
         impl<'a> $tr_assign<&'a Mpz> for Mpz {
-            #[inline]
             fn $meth_assign(&mut self, other: &Mpz) {
                 unsafe {
                     div_guard!($tr, other.is_zero());
@@ -831,12 +821,8 @@ macro_rules! impl_oper {
 
         impl $tr<Mpz> for $num {
             type Output = Mpz;
-            #[inline]
-            fn $meth(self, mut other: Mpz) -> Mpz {
-                unsafe {
-                    $fun(&mut other.mpz, &other.mpz, self as $cnum);
-                    other
-                }
+            fn $meth(self, other: Mpz) -> Mpz {
+                self.$meth(&other)
             }
         }
 
@@ -856,10 +842,8 @@ macro_rules! impl_oper {
      $meth_assign: ident, $fun: ident) => {
         impl $tr<$num> for Mpz {
             type Output = Mpz;
-            #[inline]
-            fn $meth(mut self, other: $num) -> Mpz {
-                self.$meth_assign(other);
-                self
+            fn $meth(self, other: $num) -> Mpz {
+                (&self).$meth(other)
             }
         }
 
@@ -876,7 +860,6 @@ macro_rules! impl_oper {
         }
 
         impl $tr_assign<$num> for Mpz {
-            #[inline]
             fn $meth_assign(&mut self, other: $num) {
                 unsafe {
                     div_guard!($tr, other == 0);
@@ -889,12 +872,8 @@ macro_rules! impl_oper {
     (reverse $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
         impl $tr<Mpz> for $num {
             type Output = Mpz;
-            #[inline]
-            fn $meth(self, mut other: Mpz) -> Mpz {
-                unsafe {
-                    $fun(&mut other.mpz, self as $cnum, &other.mpz);
-                    other
-                }
+            fn $meth(self, other: Mpz) -> Mpz {
+                self.$meth(&other)
             }
         }
 
