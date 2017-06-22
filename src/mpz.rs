@@ -728,19 +728,19 @@ impl Mpz {
     }
 
     pub fn kronecker_si(a: &Mpz, b: c_long) -> i32 {
-        unsafe { __gmpz_kronecker_si(a.inner(), b) as i32}
+        unsafe { __gmpz_kronecker_si(a.inner(), b) as i32 }
     }
 
     pub fn kronecker_ui(a: &Mpz, b: c_ulong) -> i32 {
-        unsafe { __gmpz_kronecker_ui(a.inner(), b) as i32}
+        unsafe { __gmpz_kronecker_ui(a.inner(), b) as i32 }
     }
 
     pub fn si_kronecker(a: c_long, b: &Mpz) -> i32 {
-        unsafe { __gmpz_si_kronecker(a, b.inner()) as i32}
+        unsafe { __gmpz_si_kronecker(a, b.inner()) as i32 }
     }
 
     pub fn ui_kronecker(a: c_ulong, b: &Mpz) -> i32 {
-        unsafe { __gmpz_ui_kronecker(a, b.inner()) as i32}
+        unsafe { __gmpz_ui_kronecker(a, b.inner()) as i32 }
     }
 }
 
