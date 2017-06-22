@@ -136,6 +136,17 @@ extern "C" {
 
     fn __gmpz_set_ui(arg1: mpz_ptr, arg2: c_ulong);
     fn __gmpz_set_si(arg1: mpz_ptr, arg2: c_long);
+
+    fn __gmpz_divisible_ui_p(arg1: mpz_srcptr, arg2: c_ulong) -> c_int;
+    fn __gmpz_congruent_p(arg1: mpz_srcptr, arg2: mpz_srcptr, arg3: mpz_srcptr) -> c_int;
+    fn __gmpz_congruent_ui_p(arg1: mpz_srcptr, arg2: c_ulong, arg3: c_ulong) -> c_int;
+
+    fn __gmpz_jacobi(arg1: mpz_srcptr, arg2: mpz_srcptr) -> c_int;
+    fn __gmpz_kronecker_si(arg1: mpz_srcptr, arg2: c_long) -> c_int;
+    fn __gmpz_kronecker_ui(arg1: mpz_srcptr, arg2: c_ulong) -> c_int;
+    fn __gmpz_si_kronecker(arg1: c_long, arg2: mpz_srcptr) -> c_int;
+    fn __gmpz_ui_kronecker(arg1: c_ulong, arg2: mpz_srcptr) -> c_int;
+
 }
 
 pub struct Mpz {
@@ -384,6 +395,18 @@ impl Mpz {
         other.is_multiple_of(self)
     }
 
+    pub fn is_multiple_of_ui(&self, other: c_ulong) -> bool {
+        unsafe { __gmpz_divisible_ui_p(self.inner(), other) != 0 }
+    }
+
+    pub fn is_congruent_to(&self, other: &Mpz, d: &Mpz) -> bool {
+        unsafe { __gmpz_congruent_p(self.inner(), other.inner(), d.inner()) != 0 }
+    }
+
+    pub fn is_congruent_to_ui(&self, other: c_ulong, d: c_ulong) -> bool {
+        unsafe { __gmpz_congruent_ui_p(self.inner(), other, d) != 0 }
+    }
+
     pub fn modulus(&self, modulo: &Mpz) -> Mpz {
         nonzero_assert!(modulo.is_zero());
         unsafe {
@@ -520,7 +543,7 @@ impl Mpz {
     // low level functions
     /// self = -self
     pub fn negate(&mut self) {
-        unsafe{
+        unsafe {
             __gmpz_neg(self.inner_mut(), self.inner());
         }
     }
@@ -690,6 +713,34 @@ impl Mpz {
                 b.inner(),
             );
         }
+    }
+
+    /// If gcd(a, b) > 1, then this return false. Else set self = inverse of a
+    /// modulo b and return true.
+    pub fn invert_mut(&mut self, a: &Mpz, b: &Mpz) -> bool {
+        unsafe { __gmpz_invert(self.inner_mut(), a.inner(), b.inner()) != 0 }
+    }
+
+    /// Return Kronecker symbol (a/b).
+    pub fn kronecker(a: &Mpz, b: &Mpz) -> i32 {
+        // In gmp.h, mpz_kronecker is an alias of mpz_jacobi.
+        unsafe { __gmpz_jacobi(a.inner(), b.inner()) as i32 }
+    }
+
+    pub fn kronecker_si(a: &Mpz, b: c_long) -> i32 {
+        unsafe { __gmpz_kronecker_si(a.inner(), b) as i32}
+    }
+
+    pub fn kronecker_ui(a: &Mpz, b: c_ulong) -> i32 {
+        unsafe { __gmpz_kronecker_ui(a.inner(), b) as i32}
+    }
+
+    pub fn si_kronecker(a: c_long, b: &Mpz) -> i32 {
+        unsafe { __gmpz_si_kronecker(a, b.inner()) as i32}
+    }
+
+    pub fn ui_kronecker(a: c_ulong, b: &Mpz) -> i32 {
+        unsafe { __gmpz_ui_kronecker(a, b.inner()) as i32}
     }
 }
 

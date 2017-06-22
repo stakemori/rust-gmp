@@ -679,6 +679,37 @@ mod mpz {
         assert_eq!(q, -3 as c_long);
         assert_eq!(r, 1 as c_long);
     }
+
+    #[test]
+    fn test_number_theoritic_func() {
+        let a = Mpz::from_ui(69);
+        let b = Mpz::from_ui(23);
+        let c = Mpz::from_ui(6);
+        let d = Mpz::from_ui(2);
+        let five = Mpz::from_ui(5);
+        let mut x = Mpz::new();
+        assert!(a.is_multiple_of(&b));
+        assert!(a.is_congruent_to(&c, &Mpz::from_ui(7)));
+        assert!(a.is_multiple_of_ui(23));
+        assert!(a.is_congruent_to_ui(6, 7));
+
+        assert!(x.invert_mut(&c, &b));
+        assert_eq!(x, 4 as c_long);
+
+        assert!(!x.invert_mut(&a, &c));
+
+        assert_eq!(Mpz::ui_kronecker(3, &d), -1);
+        assert_eq!(Mpz::ui_kronecker(5, &d), -1);
+        assert_eq!(Mpz::ui_kronecker(1, &d), 1);
+        assert_eq!(Mpz::ui_kronecker(7, &d), 1);
+        assert_eq!(Mpz::ui_kronecker(2, &d), 0);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_ui(1)), 1);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_ui(2)), -1);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_ui(3)), -1);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_ui(4)), 1);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_si(-1)), 1);
+        assert_eq!(Mpz::kronecker(&five, &Mpz::from_ui(5)), 0);
+    }
 }
 
 mod rand {
