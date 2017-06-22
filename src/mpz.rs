@@ -134,8 +134,8 @@ extern "C" {
     fn __gmpz_submul(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: mpz_srcptr);
     fn __gmpz_submul_ui(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: c_ulong);
 
-    pub fn __gmpz_set_ui(arg1: mpz_ptr, arg2: c_ulong);
-    pub fn __gmpz_set_si(arg1: mpz_ptr, arg2: c_long);
+    fn __gmpz_set_ui(arg1: mpz_ptr, arg2: c_ulong);
+    fn __gmpz_set_si(arg1: mpz_ptr, arg2: c_long);
 }
 
 pub struct Mpz {
