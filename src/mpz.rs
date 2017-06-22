@@ -380,7 +380,6 @@ impl Mpz {
         unsafe { __gmpz_divisible_p(&self.mpz, &other.mpz) != 0 }
     }
 
-    #[inline]
     pub fn divides(&self, other: &Mpz) -> bool {
         other.is_multiple_of(self)
     }
@@ -921,7 +920,6 @@ impl<'b> Neg for &'b Mpz {
 
 impl Neg for Mpz {
     type Output = Mpz;
-    #[inline]
     fn neg(mut self) -> Mpz {
         unsafe {
             __gmpz_neg(&mut self.mpz, &self.mpz);
@@ -943,7 +941,6 @@ impl<'b> Not for &'b Mpz {
 
 impl Not for Mpz {
     type Output = Mpz;
-    #[inline]
     fn not(mut self) -> Mpz {
         unsafe {
             __gmpz_com(&mut self.mpz, &self.mpz);
@@ -1250,19 +1247,16 @@ impl hash::Hash for Mpz {
 }
 
 impl Zero for Mpz {
-    #[inline]
     fn zero() -> Mpz {
         Mpz::zero()
     }
 
-    #[inline]
     fn is_zero(&self) -> bool {
         self.is_zero()
     }
 }
 
 impl One for Mpz {
-    #[inline]
     fn one() -> Mpz {
         Mpz::one()
     }
