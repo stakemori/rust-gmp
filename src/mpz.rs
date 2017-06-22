@@ -764,32 +764,6 @@ macro_rules! div_guard {
     ($tr: ident, $is_zero: expr) => {}
 }
 
-// On Windows c_long and c_ulong are only 32-bit - in order to implement operations for
-// 64-bit types we need some workarounds
-macro_rules! bit_guard {
-    (u64, $what: ident, $e1: expr, $e2: expr) => (
-        if size_of::<c_ulong>() == 8 || $what <= u32::MAX as u64 {
-            $e1
-        }
-        else {
-            $e2
-        }
-    );
-
-    (i64, $what: ident, $e1: expr, $e2: expr) => (
-        if size_of::<c_long>() == 8 || $what <= i32::MAX as i64 {
-            $e1
-        }
-        else {
-            $e2
-        }
-    );
-
-    (u32, $what: ident, $e1: expr, $e2: expr) => ($e1);
-
-    (i32, $what: ident, $e1: expr, $e2: expr) => ($e1);
-}
-
 macro_rules! impl_oper {
     ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
         impl $tr<Mpz> for Mpz {
@@ -860,10 +834,8 @@ macro_rules! impl_oper {
             #[inline]
             fn $meth(self, mut other: Mpz) -> Mpz {
                 unsafe {
-                    bit_guard!($num, self, {
-                        $fun(&mut other.mpz, &other.mpz, self as $cnum);
-                        other
-                    }, other.$meth(Mpz::from(self)))
+                    $fun(&mut other.mpz, &other.mpz, self as $cnum);
+                    other
                 }
             }
         }
@@ -872,11 +844,9 @@ macro_rules! impl_oper {
             type Output = Mpz;
             fn $meth(self, other: &'a Mpz) -> Mpz {
                 unsafe {
-                    bit_guard!($num, self, {
-                        let mut res = Mpz::new();
-                        $fun(&mut res.mpz, &other.mpz, self as $cnum);
-                        res
-                    }, other.$meth(Mpz::from(self)))
+                    let mut res = Mpz::new();
+                    $fun(&mut res.mpz, &other.mpz, self as $cnum);
+                    res
                 }
             }
         }
@@ -898,11 +868,9 @@ macro_rules! impl_oper {
             fn $meth(self, other: $num) -> Mpz {
                 unsafe {
                     div_guard!($tr, other == 0);
-                    bit_guard!($num, other, {
-                        let mut res = Mpz::new();
-                        $fun(&mut res.mpz, &self.mpz, other as $cnum);
-                        res
-                    }, self.$meth(Mpz::from(other)))
+                    let mut res = Mpz::new();
+                    $fun(&mut res.mpz, &self.mpz, other as $cnum);
+                    res
                 }
             }
         }
@@ -912,9 +880,7 @@ macro_rules! impl_oper {
             fn $meth_assign(&mut self, other: $num) {
                 unsafe {
                     div_guard!($tr, other == 0);
-                    bit_guard!($num, other,
-                               {$fun(&mut self.mpz, &self.mpz, other as $cnum);},
-                               self.$meth_assign(Mpz::from(other)))
+                    {$fun(&mut self.mpz, &self.mpz, other as $cnum);}
                 }
             }
         }
@@ -926,10 +892,8 @@ macro_rules! impl_oper {
             #[inline]
             fn $meth(self, mut other: Mpz) -> Mpz {
                 unsafe {
-                    bit_guard!($num, self, {
-                        $fun(&mut other.mpz, self as $cnum, &other.mpz);
-                        other
-                    }, Mpz::from(self).$meth(other))
+                    $fun(&mut other.mpz, self as $cnum, &other.mpz);
+                    other
                 }
             }
         }
@@ -938,11 +902,9 @@ macro_rules! impl_oper {
             type Output = Mpz;
             fn $meth(self, other: &'a Mpz) -> Mpz {
                 unsafe {
-                    bit_guard!($num, self, {
-                        let mut res = Mpz::new();
-                        $fun(&mut res.mpz, self as $cnum, &other.mpz);
-                        res
-                    }, Mpz::from(self).$meth(other))
+                    let mut res = Mpz::new();
+                    $fun(&mut res.mpz, self as $cnum, &other.mpz);
+                    res
                 }
             }
         }
@@ -951,21 +913,21 @@ macro_rules! impl_oper {
 }
 
 impl_oper!(Add, add, AddAssign, add_assign, __gmpz_add);
-impl_oper!(both u64, c_ulong, Add, add, AddAssign, add_assign, __gmpz_add_ui);
+impl_oper!(both c_ulong, c_ulong, Add, add, AddAssign, add_assign, __gmpz_add_ui);
 
 impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpz_sub);
-impl_oper!(normal u64, c_ulong, Sub, sub, SubAssign, sub_assign, __gmpz_sub_ui);
-impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub);
+impl_oper!(normal c_ulong, c_ulong, Sub, sub, SubAssign, sub_assign, __gmpz_sub_ui);
+impl_oper!(reverse c_ulong, c_ulong, Sub, sub, __gmpz_ui_sub);
 
 impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpz_mul);
-impl_oper!(both i64, c_long, Mul, mul, MulAssign, mul_assign, __gmpz_mul_si);
-impl_oper!(both u64, c_ulong, Mul, mul, MulAssign, mul_assign, __gmpz_mul_ui);
+impl_oper!(both c_long, c_long, Mul, mul, MulAssign, mul_assign, __gmpz_mul_si);
+impl_oper!(both c_ulong, c_ulong, Mul, mul, MulAssign, mul_assign, __gmpz_mul_ui);
 
 impl_oper!(Div, div, DivAssign, div_assign, __gmpz_tdiv_q);
-impl_oper!(normal u64, c_ulong, Div, div, DivAssign, div_assign, __gmpz_tdiv_q_ui);
+impl_oper!(normal c_ulong, c_ulong, Div, div, DivAssign, div_assign, __gmpz_tdiv_q_ui);
 
 impl_oper!(Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r);
-impl_oper!(normal u64, c_ulong, Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r_ui);
+impl_oper!(normal c_ulong, c_ulong, Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r_ui);
 
 impl<'b> Neg for &'b Mpz {
     type Output = Mpz;

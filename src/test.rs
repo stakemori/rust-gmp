@@ -157,8 +157,8 @@ mod mpz {
         let x: Mpz = From::<i64>::from(2);
         let y: Mpz = From::<i64>::from(3);
         assert!((&x * &y).to_string() == 6i32.to_string());
-        assert!((&x * 3i64).to_string() == 6i32.to_string());
-        assert!((&y * -5i64).to_string() == (-15i32).to_string());
+        assert!((&x * 3 as c_ulong).to_string() == 6i32.to_string());
+        assert!((&y * -5 as c_long).to_string() == (-15i32).to_string());
         // check with values not fitting in 32 bits
         assert!((&x * 5000000000i64).to_string() == 10000000000i64.to_string());
     }
