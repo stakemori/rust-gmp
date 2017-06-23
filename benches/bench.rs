@@ -15,7 +15,7 @@ mod benchmark {
             let mut a: Mpz = From::<u64>::from(2);
             let b: Mpz = From::<u64>::from(3);
             for i in 0..N {
-                a += i;
+                a += i as u64;
                 &a / &b;
             }
         })
