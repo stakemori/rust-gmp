@@ -21,4 +21,3 @@ mod benchmark {
         })
     }
 }
-
