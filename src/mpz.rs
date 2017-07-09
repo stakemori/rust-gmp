@@ -522,11 +522,7 @@ impl Mpz {
     }
 
     pub fn one() -> Mpz {
-        unsafe {
-            let mut mpz = uninitialized();
-            __gmpz_init_set_ui(&mut mpz, 1);
-            Mpz { mpz: mpz }
-        }
+        Mpz::from_ui(1)
     }
 
     pub fn zero() -> Mpz {
