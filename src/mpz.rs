@@ -571,7 +571,7 @@ impl Mpz {
     impl_c_wrapper!(gcd_mut, __gmpz_gcd, Mpz, Mpz, "self = gcd(x, y)");
     impl_c_wrapper!(lcm_mut, __gmpz_lcm, Mpz, Mpz, "self = lcm(x, y)");
 
-    impl_c_wrapper!(div_exact, __gmpz_divexact, Mpz, Mpz, "self = x/y");
+    impl_c_wrapper!(divexact, __gmpz_divexact, Mpz, Mpz, "self = x/y");
 
     impl_c_wrapper!(
         tdiv_q_mut,
