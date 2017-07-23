@@ -83,6 +83,8 @@ extern "C" {
 
     fn __gmpz_fdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
+
+    fn __gmpz_divexact(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: mpz_srcptr);
     fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_divisible_p(n: mpz_srcptr, d: mpz_srcptr) -> c_int;
     fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -569,6 +571,7 @@ impl Mpz {
     impl_c_wrapper!(gcd_mut, __gmpz_gcd, Mpz, Mpz, "self = gcd(x, y)");
     impl_c_wrapper!(lcm_mut, __gmpz_lcm, Mpz, Mpz, "self = lcm(x, y)");
 
+    impl_c_wrapper!(div_exact, __gmpz_divexact, Mpz, Mpz, "self = x/y");
 
     impl_c_wrapper!(
         tdiv_q_mut,
