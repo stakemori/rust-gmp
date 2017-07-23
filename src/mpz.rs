@@ -662,6 +662,13 @@ impl Mpz {
         }
     }
 
+    /// self = self^a.
+    pub fn set_pow_ui(&mut self, a: c_ulong) {
+        unsafe {
+            __gmpz_pow_ui(self.inner_mut(), self.inner(), a);
+        }
+    }
+
     pub fn fdiv_qr_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: &Mpz) {
         unsafe {
             __gmpz_fdiv_qr(q.inner_mut(), r.inner_mut(), n.inner(), d.inner());
