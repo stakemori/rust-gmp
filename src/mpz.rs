@@ -836,13 +836,6 @@ macro_rules! impl_oper {
             }
         }
 
-        impl<'a> $tr<&'a mut Mpz> for Mpz {
-            type Output = Mpz;
-            fn $meth(self, other: &mut Mpz) -> Mpz {
-                (&self).$meth(other)
-            }
-        }
-
         impl<'a> $tr<Mpz> for &'a Mpz {
             type Output = Mpz;
             fn $meth(self, other: Mpz) -> Mpz {
