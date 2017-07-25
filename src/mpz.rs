@@ -760,6 +760,11 @@ impl Mpz {
         let res = unsafe { __gmpz_invert(self.inner_mut(), a.inner(), b.inner()) };
         res as isize
     }
+
+    pub fn set_invert_mod(&mut self, a: &Mpz) -> isize {
+        let res = unsafe { __gmpz_invert(self.inner_mut(), self.inner(), a.inner()) };
+        res as isize
+    }
 }
 
 #[derive(Debug)]
