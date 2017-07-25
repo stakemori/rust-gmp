@@ -755,6 +755,11 @@ impl Mpz {
     pub fn ui_kronecker(a: c_ulong, b: &Mpz) -> i32 {
         unsafe { __gmpz_ui_kronecker(a, b.inner()) as i32 }
     }
+
+    pub fn invert_mod_mut(&mut self, a: &Mpz, b: &Mpz) -> isize {
+        let res = unsafe { __gmpz_invert(self.inner_mut(), a.inner(), b.inner()) };
+        res as isize
+    }
 }
 
 #[derive(Debug)]
