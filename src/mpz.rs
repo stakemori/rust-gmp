@@ -672,6 +672,13 @@ impl Mpz {
         }
     }
 
+    /// self = self/a
+    pub fn set_divexact(&mut self, a: &Mpz) {
+        unsafe {
+            __gmpz_divexact(self.inner_mut(), self.inner(), a.inner());
+        }
+    }
+
     pub fn fdiv_qr_mut(q: &mut Mpz, r: &mut Mpz, n: &Mpz, d: &Mpz) {
         unsafe {
             __gmpz_fdiv_qr(q.inner_mut(), r.inner_mut(), n.inner(), d.inner());
