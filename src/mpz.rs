@@ -149,6 +149,8 @@ extern "C" {
     fn __gmpz_si_kronecker(arg1: c_long, arg2: mpz_srcptr) -> c_int;
     fn __gmpz_ui_kronecker(arg1: c_ulong, arg2: mpz_srcptr) -> c_int;
 
+    fn __gmpz_bin_ui(arg1: mpz_ptr, arg2: mpz_srcptr, arg3: c_ulong);
+    fn __gmpz_bin_uiui(arg1: mpz_ptr, arg2: c_ulong, arg3: c_ulong);
 }
 
 pub struct Mpz {
@@ -657,6 +659,13 @@ impl Mpz {
         Ui,
         "self = the reminder of x/y. Rounds the quotient to zero."
     );
+
+    impl_c_wrapper!(
+        bin_ui_mut,
+        __gmpz_bin_ui,
+        Mpz,
+        Ui,
+        "self = binomial(x, y)");
 
     /// self = x - y.
     pub fn set_ui_sub(&mut self, x: c_ulong, y: &Mpz) {
