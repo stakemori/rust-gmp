@@ -1,5 +1,6 @@
 extern crate gmp;
 extern crate libc;
+extern crate serde_json;
 
 use gmp::mpz::mp_limb_t;
 use libc::c_int;
@@ -28,6 +29,7 @@ mod mpz {
     use std::hash::{Hash, Hasher};
     use std::collections::hash_map::DefaultHasher;
     use libc::{c_ulong, c_long};
+    use serde_json;
 
     #[test]
     fn test_set() {
@@ -542,6 +544,15 @@ mod mpz {
             Into::<Vec<u8>>::into(&max_u64),
             vec![255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8]
         );
+    }
+
+    #[test]
+    fn test_serialize() {
+        let mut a = Mpz::from_str_radix("3940349034349093409430904393409", 10).unwrap();
+        a.set_pow_ui(10);
+        let serialized = serde_json::to_string(&a).unwrap();
+        let deserialized: Mpz = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(a, deserialized);
     }
 
     #[test]
