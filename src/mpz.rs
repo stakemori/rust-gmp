@@ -662,12 +662,7 @@ impl Mpz {
         "self = the reminder of x/y. Rounds the quotient to zero."
     );
 
-    impl_c_wrapper!(
-        bin_ui_mut,
-        __gmpz_bin_ui,
-        Mpz,
-        Ui,
-        "self = binomial(x, y)");
+    impl_c_wrapper!(bin_ui_mut, __gmpz_bin_ui, Mpz, Ui, "self = binomial(x, y)");
 
     /// self = x - y.
     pub fn set_ui_sub(&mut self, x: c_ulong, y: &Mpz) {
