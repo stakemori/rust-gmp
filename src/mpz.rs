@@ -1367,7 +1367,7 @@ impl<'de> Deserialize<'de> for Mpz {
         D: Deserializer<'de>,
     {
         let a = MpzSer::deserialize(deserializer)?;
-        let mut res: Mpz = From::from(&a.v);
+        let mut res: Mpz = From::from(&a.v[..]);
         if a.sgn == Sign::Negative {
             res.negate();
         }
