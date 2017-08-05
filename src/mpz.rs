@@ -13,6 +13,8 @@ use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, N
 use std::ffi::CString;
 use std::{u32, i32};
 use num_traits::{Zero, One};
+use serde::ser::{Serialize, Serializer};
+use serde::{Deserialize, Deserializer};
 
 use ffi::*;
 
@@ -1360,5 +1362,38 @@ impl Zero for Mpz {
 impl One for Mpz {
     fn one() -> Mpz {
         Mpz::one()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MpzSer {
+    v: Vec<u8>,
+    sgn: Sign,
+}
+
+impl Serialize for Mpz {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let a = MpzSer {
+            v: From::from(self),
+            sgn: self.sign(),
+        };
+        MpzSer::serialize(&a, serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Mpz {
+    fn deserialize<D>(deserializer: D) -> Result<Mpz, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let a = MpzSer::deserialize(deserializer)?;
+        let mut res: Mpz = From::from(&a.v);
+        if a.sgn == Sign::Negative {
+            res.negate();
+        }
+        Ok(res)
     }
 }
