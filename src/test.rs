@@ -205,14 +205,6 @@ mod mpz {
     }
 
     #[test]
-    fn test_from_vecu8() {
-        let a: Mpz = From::from(93409039);
-        let v: Vec<u8> = From::from(&a);
-        let b: Mpz = From::from(&v);
-        assert_eq!(a, b)
-    }
-
-    #[test]
     fn test_abs() {
         let x: Mpz = From::<i64>::from(1000);
         let y: Mpz = From::<i64>::from(-1000);
