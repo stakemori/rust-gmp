@@ -1,5 +1,7 @@
-use super::mpz::mp_limb_t;
-use std;
+extern crate gmp;
+extern crate libc;
+
+use gmp::mpz::mp_limb_t;
 use libc::c_int;
 
 #[link(name = "gmp")]
@@ -16,9 +18,9 @@ fn test_limb_size() {
 }
 
 mod mpz {
-    use super::super::mpz::Mpz;
-    use super::super::mpz::ProbabPrimeResult;
-    use super::super::sign::Sign;
+    use super::gmp::mpz::Mpz;
+    use super::gmp::mpz::ProbabPrimeResult;
+    use super::gmp::sign::Sign;
     use std::str::FromStr;
     use std::convert::{From, Into};
     use std::{i64, u64};
@@ -714,8 +716,8 @@ mod mpz {
 
 mod rand {
     use std::convert::From;
-    use super::super::mpz::Mpz;
-    use super::super::rand::RandState;
+    use super::gmp::mpz::Mpz;
+    use super::gmp::rand::RandState;
 
     #[test]
     fn test_randstate() {
@@ -733,9 +735,9 @@ mod rand {
 mod mpq {
     use std::convert::From;
     use std::u64;
-    use super::super::mpq::Mpq;
-    use super::super::mpz::Mpz;
-    use super::super::sign::Sign;
+    use super::gmp::mpq::Mpq;
+    use super::gmp::mpz::Mpz;
+    use super::gmp::sign::Sign;
 
     #[test]
     fn test_one() {
@@ -840,8 +842,8 @@ mod mpq {
 }
 
 mod mpf {
-    use super::super::mpf::Mpf;
-    use super::super::sign::Sign;
+    use super::gmp::mpf::Mpf;
+    use super::gmp::sign::Sign;
 
     #[test]
     #[should_panic]

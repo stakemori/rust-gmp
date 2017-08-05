@@ -18,6 +18,3 @@ pub mod mpq;
 pub mod mpf;
 pub mod rand;
 pub mod sign;
-
-#[cfg(test)]
-mod test;
