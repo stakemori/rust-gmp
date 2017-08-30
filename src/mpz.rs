@@ -25,7 +25,7 @@ pub struct mpz_struct {
     _mp_d: *mut c_void,
 }
 
-pub type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
+pub type mp_limb_t = c_ulong; // TODO: Find a way to use __gmp_bits_per_limb instead.
 pub type mp_bitcnt_t = c_ulong;
 pub type mpz_srcptr = *const mpz_struct;
 pub type mpz_ptr = *mut mpz_struct;
