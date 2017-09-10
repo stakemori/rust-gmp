@@ -1342,22 +1342,13 @@ impl One for Mpz {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct MpzSer {
-    v: Vec<u8>,
-    sgn: Sign,
-}
-
 impl Serialize for Mpz {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let a = MpzSer {
-            v: From::from(self),
-            sgn: self.sign(),
-        };
-        MpzSer::serialize(&a, serializer)
+        let a = self.to_str_radix(32);
+        String::serialize(&a, serializer)
     }
 }
 
@@ -1366,11 +1357,9 @@ impl<'de> Deserialize<'de> for Mpz {
     where
         D: Deserializer<'de>,
     {
-        let a = MpzSer::deserialize(deserializer)?;
-        let mut res: Mpz = From::from(&a.v[..]);
-        if a.sgn == Sign::Negative {
-            res.negate();
-        }
+        let a = String::deserialize(deserializer)?;
+        let mut res = Mpz::new();
+        res.set_from_str_radix(&a, 32);
         Ok(res)
     }
 }
