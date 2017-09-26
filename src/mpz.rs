@@ -1131,6 +1131,12 @@ impl<'a> From<&'a [u8]> for Mpz {
     }
 }
 
+impl<'a> From<&'a Mpz> for Mpz {
+    fn from(other: &Mpz) -> Mpz {
+        other.clone()
+    }
+}
+
 impl From<u64> for Mpz {
     fn from(other: u64) -> Mpz {
         unsafe {
