@@ -93,7 +93,7 @@ impl RandState {
         }
     }
 
-    /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
+    /// Generate a uniformly distributed random integer in the range 0 to `2^n−1`, inclusive.
     pub fn urandom_2exp(&mut self, n: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();

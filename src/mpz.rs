@@ -348,7 +348,7 @@ impl Mpz {
     /// probabilistic primality tests. A higher reps value will reduce the
     /// chances of a non-prime being identified as “probably prime”. A
     /// composite number will be identified as a prime with a probability of
-    /// less than 4^(-reps). Reasonable values of reps are between 15 and 50.
+    /// less than `4^(-reps)`. Reasonable values of reps are between 15 and 50.
     pub fn probab_prime(&self, reps: i32) -> ProbabPrimeResult {
         match unsafe { __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8 } {
             2 => ProbabPrimeResult::Prime,
@@ -374,7 +374,7 @@ impl Mpz {
         }
     }
 
-    /// Given (a, b), return (g, s, t) such that g = gcd(a, b) = s*a + t*b.
+    /// Given `(a, b)`, return `(g, s, t)` such that `g = gcd(a, b) = s*a + t*b`.
     pub fn gcdext(&self, other: &Mpz) -> (Mpz, Mpz, Mpz) {
         unsafe {
             let mut g = Mpz::new();
@@ -671,7 +671,7 @@ impl Mpz {
         }
     }
 
-    /// self = self^a.
+    /// `self = self^a`.
     pub fn set_pow_ui(&mut self, a: c_ulong) {
         unsafe {
             __gmpz_pow_ui(self.inner_mut(), self.inner(), a);
